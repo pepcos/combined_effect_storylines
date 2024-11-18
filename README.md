@@ -1,4 +1,4 @@
-*** Recipe, diagnostic and ERSST cmorizer ***
+***Recipe, diagnostic and ERSST cmorizer***
 
 recipe: recipe_nino_trends.yml --> computes trends and ONI index for CMIP models and OBS
 
