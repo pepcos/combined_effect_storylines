@@ -1,0 +1,271 @@
+# ESMValTool
+# recipe_python.yml
+#
+# See https://docs.esmvaltool.org/en/latest/recipes/recipe_examples.html
+# for a description of this recipe.
+#
+# See https://docs.esmvaltool.org/projects/esmvalcore/en/latest/recipe/overview.html
+# for a description of the recipe format.
+---
+documentation:
+  description: |
+    Recipe that computes trends and starts preprocessing the Niño index
+  title: Combined effect storylines (ENSO)
+  authors:
+    - cos_josep
+
+datasets: 
+- dataset: "*"
+  institute: CAS
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: CCCma
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: gn
+  project: CMIP6
+- dataset: "*"
+  institute: CCCR-IITM
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: CSIRO-ARCCSS
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: EC-Earth-Consortium
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: FIO-QLNM
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: INM
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: KIOST
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: MIROC
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: gn
+  project: CMIP6
+- dataset: "*"
+  institute: MOHC
+  ensemble: r1i1p1f3
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: MPI-M
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: gn
+  project: CMIP6
+- dataset: "*"
+  institute: NCAR
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: NCC
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: GFDL-ESM4
+  institute: NOAA-GFDL
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: "*"
+  institute: THU
+  ensemble: "*"
+  exp:
+  - historical
+  - ssp245
+  grid: "*"
+  project: CMIP6
+- dataset: ERSSTv5
+  tier: 2
+  type: reanaly
+  version: v5
+  project: OBS
+
+
+preprocessors:
+  trends:
+    # extract_region: 
+    #   start_longitude: 120
+    #   end_longitude: 290 
+    #   start_latitude: -70
+    #   end_latitude: 70
+    regrid: 
+      target_grid: 2.5x2.5
+      scheme:
+        reference: esmf_regrid.schemes:ESMFBilinear
+        use_src_mask: True 
+    annual_statistics:
+      operator: mean
+    linear_trend:
+      coordinate: time
+
+  oni_general_1: &oni_general_1
+    regrid: 
+      target_grid: 2.5x2.5
+      scheme:
+        reference: esmf_regrid.schemes:ESMFBilinear
+        use_src_mask: True 
+    extract_region: 
+      start_longitude: -170
+      end_longitude: -120
+      start_latitude: -5
+      end_latitude: 5
+ 
+  oni_general_2: &oni_general_2
+    area_statistics: 
+      operator: mean
+    rolling_window_statistics: 
+      coordinate: time
+      operator: mean
+      window_length: 3
+
+  oni_2020-2024: 
+    custom_order: true
+    <<: *oni_general_1
+    anomalies: 
+      period: month
+      reference: 
+        start_year: 1991
+        start_month: 1
+        start_day: 1
+        end_year: 2021
+        end_month: 1
+        end_day: 1
+    <<: *oni_general_2
+    extract_time:
+      start_year: 2020
+      start_month: 1
+      start_day: 1
+      end_year: 2025
+      end_month: 1
+      end_day: 1
+
+
+  oni_2015-2019: 
+    custom_order: true
+    <<: *oni_general_1
+    anomalies:
+      period: month
+      reference: 
+        start_year: 1986
+        start_month: 1
+        start_day: 1
+        end_year: 2016
+        end_month: 1
+        end_day: 1
+    <<: *oni_general_2
+    extract_time:
+      start_year: 2015
+      start_month: 1
+      start_day: 1
+      end_year: 2020
+      end_month: 1
+      end_day: 1
+
+  oni_2010-2014: 
+    custom_order: true
+    <<: *oni_general_1
+    anomalies:
+      period: month
+      reference: 
+        start_year: 1981
+        start_month: 1
+        start_day: 1
+        end_year: 2011
+        end_month: 1
+        end_day: 1
+    <<: *oni_general_2
+    extract_time:
+      start_year: 2010
+      start_month: 1
+      start_day: 1
+      end_year: 2015
+      end_month: 1
+      end_day: 1
+  
+
+diagnostics:
+  nino_and_sst:
+    variables:
+      tos:
+        mip: Omon
+        preprocessor: trends
+        timerange: 1980/2023
+      oni_2010-2014:
+        short_name: tos
+        mip: Omon
+        preprocessor: oni_2010-2014
+        timerange: 1980/2015
+      oni_2015-2019:
+        short_name: tos
+        mip: Omon
+        preprocessor: oni_2015-2019
+        timerange: 1985/2020
+      oni_2020-2024:
+        short_name: tos
+        mip: Omon
+        preprocessor: oni_2020-2024
+        timerange: 1990/2023
+    scripts:
+      gather_data_script:
+        script: ./diagnostic_script.py
